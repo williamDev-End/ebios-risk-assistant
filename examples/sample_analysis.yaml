@@ -1,0 +1,157 @@
+context:
+  organization: "BioTech Pharma Solutions"
+  target_name: "Unité Industrielle de Production de Vaccins"
+  perimeter: "Réseau de supervision SCADA et chaîne de bioréacteurs"
+  author: "Équipe Cybersécurité & Architecture"
+  date: "02/11/2026"
+
+workshops:
+  workshop_1_baseline:
+    scope:
+      missions:
+        - "Assurer la production continue et conforme des lots de vaccins"
+        - "Garantir la traçabilité réglementaire et l'intégrité des formulations"
+
+    primary_assets:
+      - id: "VM-01"
+        name: "Données de Formulation et Brevets R&D"
+        category: "Information"
+        business_owner: "Pharmacien Responsable"
+        security_criteria:
+          availability: 2
+          integrity: 4
+          confidentiality: 4
+      - id: "VM-02"
+        name: "Processus de Conduite des Bioréacteurs"
+        category: "Processus"
+        business_owner: "Directeur de Production"
+        security_criteria:
+          availability: 4
+          integrity: 4
+          confidentiality: 1
+
+    supporting_assets:
+      - id: "BS-01"
+        name: "Automates Programmables Industriels (PLC) et Serveur SCADA"
+        type: "Matériel et Système d'Exploitation"
+        technical_owner: "Équipe Automatisme OT"
+      - id: "BS-02"
+        name: "Base de Données Centrale ERP et Historian"
+        type: "Logiciel d'Entreprise"
+        technical_owner: "Responsable Infrastructure IT"
+
+    dreaded_events:
+      - id: "ER-01"
+        primary_asset_id: "VM-01"
+        description: "Exfiltration des formules chimiques et études de stabilité avant brevetage"
+        impact_nature: "Perte d'avantage concurrentiel stratégique et annulation de brevet"
+        severity: 4
+      - id: "ER-02"
+        primary_asset_id: "VM-02"
+        description: "Altération des paramètres thermiques provoquant l'arrêt imprévu des réacteurs"
+        impact_nature: "Destruction directe des lots, préjudice financier de 2,5 M€ et rupture d'approvisionnement"
+        severity: 4
+
+    security_baseline_gap_analysis:
+      - standard: "Guide d'hygiène informatique ANSSI"
+        requirement: "Règle 8 : Comptes d'administration dédiés et nominatifs"
+        compliance_status: "Appliqué avec restriction"
+        identified_gap: "Compte administrateur local partagé résiduel sur le superviseur SCADA"
+      - standard: "IEC 62443-3-3"
+        requirement: "Segmentation stricte entre zones IT bureautiques et zones OT industrielles"
+        compliance_status: "Appliqué sans restriction"
+        identified_gap: "Aucun. DMZ industrielle et pare-feux certifiés déployés"
+
+  workshop_2_risk_sources:
+    sources:
+      - id: "SR-01"
+        name: "Concurrent Industriel Hostile"
+        motivation: "Espionnage économique et vol de formules thérapeutiques"
+        resources: "Élevé"
+        activity_level: "Élevée"
+        relevance: "Élevée"
+      - id: "SR-02"
+        name: "Groupe Cybercriminel avec Ransomware"
+        motivation: "Extorsion financière par blocage total de la production"
+        resources: "Moyen"
+        activity_level: "Élevée"
+        relevance: "Élevée"
+
+  workshop_3_strategic_scenarios:
+    ecosystem_stakeholders:
+      - id: "PP-01"
+        name: "Infogéreur et Prestataire de Télémaintenance OT"
+        category: "Prestataire IT/OT"
+        dependency: 4
+        penetration: 4
+        cyber_maturity: 2
+        trust: 2
+        # Score de menace = (4 * 4) / (2 * 2) = 4.00 (Critique)
+      - id: "PP-02"
+        name: "Fournisseur de Réactifs et Précurseurs Chimiques"
+        category: "Fournisseur Industriel"
+        dependency: 3
+        penetration: 1
+        cyber_maturity: 3
+        trust: 3
+        # Score de menace = (3 * 1) / (3 * 3) = 0.33 (Faible)
+
+    scenarios:
+      - id: "SC-S01"
+        name: "Espionnage et exfiltration des brevets via rebond sur l'accès distant"
+        source_id: "SR-01"
+        dreaded_event_id: "ER-01"
+        attack_path: "Rebond d'attaque via les identifiants volés de la télémaintenance externe"
+        severity: 4
+      - id: "SC-S02"
+        name: "Sabotage de la chaîne de production par altération du réseau d'automates"
+        source_id: "SR-02"
+        dreaded_event_id: "ER-02"
+        attack_path: "Intrusion directe via une vulnérabilité exposée en périphérie VPN"
+        severity: 4
+
+  workshop_4_operational_scenarios:
+    scenarios:
+      - id: "SC-O01"
+        name: "Dump des bases R&D par injection et compromission des sauvegardes"
+        strategic_scenario_id: "SC-S01"
+        supporting_asset_id: "BS-02"
+        kill_chain:
+          reconnaissance: "Reconnaissance OSINT et énumération des comptes VPN du prestataire"
+          intrusion: "Connexion via session VPN non protégée par un double facteur"
+          lateral_movement: "Pivot vers le serveur de base de données via extraction de hashs locaux"
+          exploitation: "Exfiltration chiffrée des tables SQL de formulation vers un serveur C2"
+        severity: 4
+        likelihood: 3
+      - id: "SC-O02"
+        name: "Injection de code malveillant dans les blocs logiques des automates PLC"
+        strategic_scenario_id: "SC-S02"
+        supporting_asset_id: "BS-01"
+        kill_chain:
+          reconnaissance: "Scan réseau et détection du port de supervision SCADA ouvert"
+          intrusion: "Exploitation d'une vulnérabilité RCE non corrigée sur la passerelle d'accès"
+          lateral_movement: "Traversée de la passerelle vers le bus de communication Modbus/TCP"
+          exploitation: "Téléversement d'un firmware corrompu provoquant la dérive thermique des cuves"
+        severity: 4
+        likelihood: 2
+
+  workshop_5_risk_treatment:
+    measures:
+      - id: "MES-01"
+        operational_scenario_id: "SC-O01"
+        pillar: "Protection"
+        action: "Déploiement d'un bastion d'administration PAM, MFA obligatoire et chiffrement au repos des bases de données"
+        responsible: "Responsable Sécurité IT"
+        deadline: "2027-T1"
+        residual_risk:
+          severity: 2
+          likelihood: 1
+      - id: "MES-02"
+        operational_scenario_id: "SC-O02"
+        pillar: "Défense"
+        action: "Mise en place d'une sonde réseau passive OT (détection d'anomalies de protocole) et verrouillage physique en écriture des PLC"
+        responsible: "Responsable Automatisme & RSSI"
+        deadline: "2027-T2"
+        residual_risk:
+          severity: 2
+          likelihood: 1
