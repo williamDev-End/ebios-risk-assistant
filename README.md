@@ -1,192 +1,97 @@
 # EBIOS Risk Assistant (`ebios-risk-assistant`)
 
-A modular, Security-as-Code command-line tool written in Python to scaffold, validate, and compute cyber risk assessments following the official ANSSI EBIOS Risk Manager methodology (Workshops 1 to 5).
+Assistant d'analyse de risques cybersécurité et générateur d'homologation automatisé basé sur la méthode officielle **ANSSI EBIOS Risk Manager** (Ateliers 1 à 5).
+
+L'outil permet de modéliser des études EBIOS RM au format structuré YAML ou via un questionnaire interactif en ligne de commande, puis de compiler un **rapport exécutif PDF officiel de 4 pages calibré pour l'impression** via WeasyPrint.
 
 ---
 
-## Overview
+## Fonctionnalités
 
-The EBIOS Risk Manager (EBIOS RM) framework, standardized by the French National Cybersecurity Agency (ANSSI), provides a structured, iterative approach to risk analysis across five formal workshops. Traditional assessments often rely on disjointed spreadsheets or proprietary GRC platforms. 
-
-`ebios-risk-assistant` introduces a declarative **Security-as-Code** workflow:
-1. Define all organizational assets, threat actors, attack paths, and controls in a clean, human-readable YAML document.
-2. Verify relational integrity and mathematical consistency across workshops.
-3. Compute initial and residual risk scores using standard 4x4 likelihood and severity matrices.
-4. Export professional executive reports in Markdown containing complete tabular records and automated Mermaid workflow diagrams.
-
----
-
-## Methodology Alignment (ANSSI EBIOS RM 5-Workshop Structure)
-
-The assistant natively enforces the sequential dependencies mandated by ANSSI:
-
-| Workshop | Name | Methodological Focus | Key Artefacts & Tables |
-| :--- | :--- | :--- | :--- |
-| **Workshop 1** | Scope & Security Baseline | Establish assessment perimeter and technical baseline | Missions, Primary Assets (Business Values), Supporting Assets (Technical), Dreaded Events, Baseline Gap Analysis |
-| **Workshop 2** | Risk Sources | Identify, characterize, and prioritize attackers | Threat Sources, Motivation, Resource Level, Sector Activity, Relevance rating |
-| **Workshop 3** | Strategic Scenarios | Map macro-level threat paths through the ecosystem | Stakeholder Threat Rating formula, Strategic Attack Vectors |
-| **Workshop 4** | Operational Scenarios | Deconstruct technical intrusion and exploitation paths | 4-Phase Cyber Kill Chain (Reconnaissance, Intrusion, Lateral Movement, Exploitation), Likelihood (1-4), Severity (1-4) |
-| **Workshop 5** | Risk Treatment | Establish remediation strategy and evaluate residual risk | Risk Treatment Plan structured across 4 Security Pillars (Governance, Protection, Defense, Resilience), Residual Scoring |
+- **Atelier 1 (Cadrage & Socle)** : Cartographie des missions, Valeurs Métiers (D/I/C), Biens Supports et analyse d'écarts de conformité (Gap Analysis).
+- **Ateliers 2 & 3 (Sources de Risques & Écosystème)** : Caractérisation des attaquants, évaluation chiffrée de la menace des tiers via la formule officielle ANSSI :
+  Niveau de Menace = (Dépendance x Pénétration) / (Maturité x Confiance)
+  et formalisation des scénarios stratégiques.
+- **Atelier 4 (Scénarios Opérationnels)** : Déroulé technique des modes opératoires selon la Kill Chain ANSSI en 4 phases (Connaître, Rentrer, Trouver, Exploiter).
+- **Atelier 5 (Traitement du Risque)** : Double matrice cartésienne 4x4 (Risque Brut vs Risque Résiduel) avec pastilles de positionnement des scénarios et plan d'action rattaché aux 4 piliers de sécurité de l'ANSSI.
+- **Export Exécutif PDF** : Rendu A4 paginé, sans dépendance bureautique lourde, prêt pour les comités d'homologation et de direction.
 
 ---
 
-## Project Architecture
+## Architecture du Projet
 
-```text
 ebios-risk-assistant/
-│
-├── ebios_assistant.py         # Main CLI entrypoint (subcommands: init, new, audit)
-├── requirements.txt           # Python dependencies (PyYAML)
-├── README.md                  # Project documentation and guide
-│
 ├── core/
-│   ├── __init__.py
-│   ├── creator.py             # Template generator and interactive terminal wizard
-│   ├── engine.py              # Cross-workshop consistency validator & computation engine
-│   ├── loader.py              # YAML structure and workshop schema validator
-│   └── matrix.py              # 4x4 matrix calculator (Severity x Likelihood)
-│
+│   ├── creator.py         # Questionnaire terminal interactif (scaffolding pas-à-pas)
+│   ├── engine.py          # Moteur de validation logique et calcul des risques
+│   ├── loader.py          # Chargement et validation de structure YAML
+│   └── matrix.py          # Définition des grilles 4x4 et seuils de gravité/vraisemblance
 ├── exporters/
-│   ├── __init__.py
-│   └── markdown_report.py     # Executive Markdown generator with tables and Mermaid diagrams
-│
-└── examples/
-    └── sample_analysis.yaml   # Comprehensive end-to-end case study (Biotech / Industrial)
-```
+│   ├── markdown_report.py # Générateur de synthèse Markdown
+│   └── pdf_report.py      # Moteur de rendu WeasyPrint PDF officiel ANSSI 4 pages
+├── examples/
+│   └── sample_analysis.yaml # Étude type complète (BioTech Pharma Solutions)
+├── ebios_assistant.py     # Point d'entrée CLI principal
+├── requirements.txt       # Dépendances Python
+└── README.md
 
 ---
 
-## Installation & Setup
+## Prérequis et Installation
 
-### Prerequisites
-- Python 3.10 or higher
-- Git
-- Compatible with macOS, Linux, and Windows
+### 1. Dépendances système (macOS)
 
-### Quick Start
+WeasyPrint s'appuie sur les bibliothèques C pango, cairo et gobject. Sur macOS (Apple Silicon), installez-les via Homebrew :
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/<your-username>/ebios-risk-assistant.git
-   cd ebios-risk-assistant
-   ```
+brew install pango cairo libffi glib
 
-2. Create and activate a local Python virtual environment:
-   - On macOS / Linux:
-     ```bash
-     python3 -m venv .venv
-     source .venv/bin/activate
-     ```
-   - On Windows:
-     ```powershell
-     python -m venv .venv
-     .venv\Scripts\Activate.ps1
-     ```
+### 2. Environnement virtuel Python
 
-3. Install required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Cloner le dépôt
+git clone <URL_DU_DEPOT>
+cd ebios-risk-assistant
+
+# Créer et activer le venv
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Installer les paquets requis
+pip install -r requirements.txt
 
 ---
 
-## CLI Usage Guide
+## Utilisation
 
-The assistant features three subcommands: `init`, `new`, and `audit`.
+Si WeasyPrint ne localise pas automatiquement les bibliothèques Homebrew sous macOS, exportez la variable d'environnement :
 
-### 1. Generating a Blank Assessment Template (`init`)
-If you prefer drafting your analysis directly in your code editor (such as VS Code), generate a pre-formatted template with guidance comments:
+export DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib:$DYLD_FALLBACK_LIBRARY_PATH
 
-```bash
-python ebios_assistant.py init --out my_assessment.yaml
-```
+### 1. Compiler un audit existant en rapport PDF
+Valide la cohérence inter-ateliers et génère le rapport officiel :
 
-### 2. Interactive Terminal Wizard (`new`)
-If starting from scratch and preferring an interactive setup, the wizard prompts you for core baseline items and generates the initial YAML structure:
-
-```bash
-python ebios_assistant.py new --out my_assessment.yaml
-```
-
-### 3. Validating and Auditing an Assessment (`audit`)
-Execute cross-workshop integrity checks and compute risk scores:
-
-```bash
-# Terminal output only
 python ebios_assistant.py audit examples/sample_analysis.yaml
 
-# Generate an automated Markdown report named after the organization
-python ebios_assistant.py audit examples/sample_analysis.yaml --report
+### 2. Démarrer une nouvelle analyse interactive
+Lance l'assistant en mode console pour guider la saisie pas-à-pas :
 
-# Generate a report with a custom filename
-python ebios_assistant.py audit examples/sample_analysis.yaml --report AUDIT_REPORT.md
-```
+python ebios_assistant.py new
 
----
+### 3. Générer un modèle vierge
+Crée une structure YAML prête à être complétée manuellement :
 
-## Core Calculations & Scoring Standards
-
-### Risk Matrix Calculation (Workshops 4 & 5)
-Risk is evaluated on a discrete 4x4 matrix crossing Severity (1 to 4) and Likelihood (1 to 4):
-
-$$\text{Risk Score} = \text{Severity} \times \text{Likelihood}$$
-
-| Risk Score Range | Qualitative Level | Operational Significance |
-| :---: | :---: | :--- |
-| **1 - 3** | **Low** | Risk acceptable under standard operational baselines. |
-| **4 - 6** | **Moderate** | Tolerable under monitoring; low priority mitigation. |
-| **7 - 9** | **High** | Requires planned treatment and managerial oversight. |
-| **10 - 16** | **Critical** | Unacceptable; demands immediate remediation or operational halt. |
-
-### Ecosystem Stakeholder Threat Rating (Workshop 3)
-Stakeholder risk exposure is calculated using the official ANSSI formula:
-
-$$\text{Threat Level} = \frac{\text{Dependency} \times \text{Penetration}}{\text{Cyber Maturity} \times \text{Trust}}$$
-
-- **Dependency (1-4):** Reliance of primary business processes on the third party.
-- **Penetration (1-4):** Technical or physical access depth granted to the third party.
-- **Cyber Maturity (1-4):** Assessed technical security posture of the partner.
-- **Trust (1-4):** Contractual, legal, and operational assurance established.
+python ebios_assistant.py init mon_etude.yaml
 
 ---
 
-## Continuous Integration & Security Automation
+## Structure du Rapport PDF Généré (4 Pages)
 
-Because assessments are stored in declarative YAML files, `ebios-risk-assistant` can be integrated directly into CI/CD pipelines (e.g., GitHub Actions, GitLab CI) to prevent merging invalid risk architectures or untracked operational scenarios.
-
-### Sample GitHub Action Workflow (`.github/workflows/ebios-audit.yml`)
-
-```yaml
-name: EBIOS RM Quality Gate
-
-on:
-  pull_request:
-    paths:
-      - '**/*.yaml'
-      - '**/*.yml'
-
-jobs:
-  validate-risk-architecture:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-
-      - name: Audit Reference Assessment
-        run: python ebios_assistant.py audit examples/sample_analysis.yaml --report EBIOS_AUDIT.md
-```
+1. Page 1 : Cadrage, Missions de l'organisation, Valeurs Métiers (D/I/C), Biens Supports et écarts du socle (Gap Analysis).
+2. Page 2 : Sources de risques retenues, cotation de la menace de l'écosystème et scénarios stratégiques.
+3. Page 3 : Scénarios opérationnels détaillés en Kill Chain 4 phases (Connaître, Rentrer, Trouver, Exploiter).
+4. Page 4 : Matrices 4x4 brute et résiduelle avec marqueurs de scénarios (S1, S2) et plan de traitement rattaché aux piliers ANSSI.
 
 ---
 
-## License
+## Licence
 
-This project is distributed under the MIT License. See `LICENSE` for further details.
+Projet sous licence MIT.
